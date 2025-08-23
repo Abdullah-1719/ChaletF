@@ -1,163 +1,759 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chalet Reservation</title>
+  <title>الجوهرة - Chalet Reservation</title>
   <style>
+    :root {
+      --primary: #1a1a1a;
+      --primary-hover: #000000;
+      --secondary: #f5f5f5;
+      --accent: #404040;
+      --accent-light: #606060;
+      --success: #2a2a2a;
+      --danger: #1a1a1a;
+      --warning: #333333;
+      --background: #000000;
+      --surface: #1a1a1a;
+      --surface-light: #2a2a2a;
+      --surface-lighter: #3a3a3a;
+      --text-primary: #ffffff;
+      --text-secondary: #cccccc;
+      --text-muted: #888888;
+      --border: #404040;
+      --shadow: rgba(0, 0, 0, 0.5);
+      --shadow-lg: rgba(0, 0, 0, 0.8);
+      --glow: rgba(255, 255, 255, 0.1);
+      --glow-strong: rgba(255, 255, 255, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: "Segoe UI", Roboto, sans-serif;
-      background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(26, 26, 26, 0.8) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(42, 42, 42, 0.6) 0%, transparent 50%),
+        linear-gradient(135deg, var(--background) 0%, #111111 50%, #0a0a0a 100%);
       margin: 0;
       padding: 0;
-      color: #2c3e50;
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
     }
+
+    /* Added animated background pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 2px,
+          rgba(255, 255, 255, 0.01) 2px,
+          rgba(255, 255, 255, 0.01) 4px
+        ),
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 2px,
+          rgba(255, 255, 255, 0.005) 2px,
+          rgba(255, 255, 255, 0.005) 4px
+        );
+      pointer-events: none;
+      z-index: -1;
+      animation: patternMove 20s linear infinite;
+    }
+
+    @keyframes patternMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
     header {
-      background: linear-gradient(90deg, #43a047, #2e7d32);
+      background: 
+        linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.9) 50%, rgba(42, 42, 42, 0.85) 100%),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse"><polygon points="25,0 50,14.4 50,28.9 25,43.4 0,28.9 0,14.4" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/></pattern></defs><rect width="200" height="200" fill="url(%23hexagons)"/></svg>');
       color: white;
-      padding: 1.5rem;
+      padding: 4rem 2rem;
       text-align: center;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      box-shadow: 
+        0 8px 32px var(--shadow-lg),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
     }
+
+    /* Enhanced header glow effect */
+    header::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+      animation: headerGlow 8s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes headerGlow {
+      0% { opacity: 0.3; transform: scale(0.8); }
+      100% { opacity: 0.6; transform: scale(1.2); }
+    }
+
     header h1 {
       margin: 0;
-      font-size: 1.8rem;
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: 3px;
+      position: relative;
+      z-index: 2;
+      text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(255, 255, 255, 0.1),
+        0 0 40px rgba(255, 255, 255, 0.05);
+      background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 50%, #ffffff 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: titleShimmer 3s ease-in-out infinite alternate;
     }
+
+    @keyframes titleShimmer {
+      0% { filter: brightness(1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.1)); }
+      100% { filter: brightness(1.1) drop-shadow(0 0 20px rgba(255, 255, 255, 0.2)); }
+    }
+
     .container {
-      max-width: 900px;
-      margin: 25px auto;
-      padding: 24px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 2.5rem;
+      background: 
+        linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.9) 100%),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.02)"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+      backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 28px;
+      box-shadow: 
+        0 25px 50px var(--shadow-lg),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+      position: relative;
+      animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
     }
+
+    /* Added floating particles effect */
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.1) 20%, 
+        rgba(255, 255, 255, 0.4) 50%, 
+        rgba(255, 255, 255, 0.1) 80%, 
+        transparent 100%);
+      animation: borderGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes borderGlow {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
     h2, h3 {
-      margin-bottom: 12px;
-      color: #2e7d32;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+      font-weight: 700;
+      position: relative;
+      padding-bottom: 1rem;
     }
+
+    h2 {
+      font-size: 2rem;
+      border-bottom: 3px solid;
+      border-image: linear-gradient(90deg, var(--accent), var(--accent-light), transparent) 1;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
     #calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      margin-top: 10px;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: 
+        linear-gradient(135deg, rgba(42, 42, 42, 0.6) 0%, rgba(26, 26, 26, 0.8) 100%);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 10px 20px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
     }
+
+    /* Added calendar background animation */
+    #calendar::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+      animation: calendarPulse 6s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes calendarPulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
+      50% { opacity: 0.6; transform: scale(1.2) rotate(180deg); }
+    }
+
     .dow {
-      font-weight: bold;
+      font-weight: 700;
       text-align: center;
-      padding: 6px;
-      background: #f1f8e9;
-      border-radius: 6px;
+      padding: 1.25rem 0.75rem;
+      background: linear-gradient(135deg, var(--surface-lighter), var(--surface-light));
+      border-radius: 16px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 1;
     }
+
     .day {
-      padding: 12px;
-      border-radius: 10px;
-      min-height: 80px;
+      padding: 1.25rem;
+      border-radius: 20px;
+      min-height: 110px;
       text-align: center;
-      font-size: 14px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      font-size: 0.875rem;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
     }
-    .day:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    .day.empty { background: transparent; box-shadow: none; cursor: default; }
-    .day.available { background: #e8f5e9; border: 1px solid #c8e6c9; cursor: pointer; }
-    .day.booked { background: #ffebee; border: 1px solid #ef9a9a; color: #c62828; cursor: not-allowed; }
-    .day.today { border: 2px solid #43a047; }
-    .num { font-weight: bold; font-size: 16px; }
-    .resv-name { margin-top: 6px; font-size: 13px; color: #555; font-style: italic; }
-    .btn {
-      padding: 8px 16px;
+
+    /* Enhanced day hover effects with multiple layers */
+    .day::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.1), 
+        rgba(255, 255, 255, 0.2), 
+        rgba(255, 255, 255, 0.1), 
+        transparent);
+      transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .day::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translate(-50%, -50%);
+    }
+
+    .day:hover::before {
+      left: 100%;
+    }
+
+    .day:hover::after {
+      width: 200px;
+      height: 200px;
+    }
+
+    .day:hover {
+      transform: translateY(-6px) scale(1.05);
+      box-shadow: 
+        0 15px 30px var(--shadow-lg),
+        0 0 20px rgba(255, 255, 255, 0.1);
+      border-color: var(--accent-light);
+      background: linear-gradient(135deg, var(--surface-light) 0%, var(--surface-lighter) 100%);
+    }
+
+    .day.empty {
+      background: transparent;
+      box-shadow: none;
+      cursor: default;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background 0.2s, transform 0.1s;
     }
-    .btn:hover { transform: scale(1.05); }
-    .btn.primary { background: #43a047; color: white; }
-    .btn.primary:hover { background: #2e7d32; }
-    .btn.danger { background: #e53935; color: white; }
-    .btn.danger:hover { background: #c62828; }
-    .btn.light { background: #f1f1f1; }
-    .btn.light:hover { background: #e0e0e0; }
-    .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-    .form-grid { display: grid; gap: 16px; margin-top: 10px; }
+
+    .day.empty:hover {
+      transform: none;
+    }
+
+    .day.empty::before,
+    .day.empty::after {
+      display: none;
+    }
+
+    .day.available {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .day.available:hover {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: white;
+      box-shadow: 
+        0 15px 30px var(--shadow-lg),
+        0 0 25px rgba(64, 64, 64, 0.4);
+    }
+
+    .day.booked {
+      background: linear-gradient(135deg, #2a2a2a 0%, #404040 100%);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      position: relative;
+    }
+
+    .day.booked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 15%;
+      right: 15%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      transform: translateY(-50%);
+      border-radius: 2px;
+    }
+
+    .day.today {
+      border: 3px solid var(--accent-light);
+      box-shadow: 
+        0 0 25px rgba(64, 64, 64, 0.6),
+        inset 0 0 20px rgba(255, 255, 255, 0.05);
+      animation: todayPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes todayPulse {
+      0%, 100% { box-shadow: 0 0 25px rgba(64, 64, 64, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.05); }
+      50% { box-shadow: 0 0 35px rgba(64, 64, 64, 0.8), inset 0 0 30px rgba(255, 255, 255, 0.1); }
+    }
+
+    .num {
+      font-weight: 800;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 2;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .resv-name {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-style: italic;
+      position: relative;
+      z-index: 2;
+    }
+
+    .btn {
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.875rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Enhanced button effects with multiple animation layers */
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.2), 
+        rgba(255, 255, 255, 0.4), 
+        rgba(255, 255, 255, 0.2), 
+        transparent);
+      transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translate(-50%, -50%);
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:hover::after {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 50%, var(--primary) 100%);
+      color: white;
+      box-shadow: 
+        0 6px 16px rgba(26, 26, 26, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .btn.primary:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 
+        0 12px 24px rgba(26, 26, 26, 0.8),
+        0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .btn.danger {
+      background: linear-gradient(135deg, var(--danger) 0%, #333333 50%, var(--danger) 100%);
+      color: white;
+      box-shadow: 
+        0 6px 16px rgba(26, 26, 26, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .btn.danger:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 
+        0 12px 24px rgba(26, 26, 26, 0.8),
+        0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .btn.light {
+      background: linear-gradient(135deg, var(--surface-light) 0%, var(--surface) 50%, var(--surface-light) 100%);
+      color: var(--text-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn.light:hover {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--accent) 50%, var(--surface) 100%);
+      color: white;
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 
+        0 12px 24px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .actions {
+      display: flex;
+      gap: 1.25rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 2rem;
+      margin-top: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
     input {
       width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 15px;
+      padding: 1.25rem 1.5rem;
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      font-size: 1rem;
+      background: 
+        linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(42, 42, 42, 0.8) 100%);
+      color: var(--text-primary);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.1);
     }
-    input:focus { border-color: #43a047; outline: none; box-shadow: 0 0 4px rgba(67,160,71,0.4); }
+
+    input:focus {
+      border-color: var(--accent-light);
+      outline: none;
+      box-shadow: 
+        0 0 0 4px rgba(64, 64, 64, 0.3),
+        inset 0 2px 4px rgba(0, 0, 0, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.1);
+      background: 
+        linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.9) 100%);
+      transform: translateY(-1px);
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
+    }
+
     .reservation-item {
-      border: 1px solid #ddd;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      background: #fafafa;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      border-radius: 20px;
+      background: 
+        linear-gradient(135deg, rgba(42, 42, 42, 0.9) 0%, rgba(26, 26, 26, 0.9) 100%);
+      backdrop-filter: blur(15px);
+      box-shadow: 
+        0 10px 20px var(--shadow),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
+
+    .reservation-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .reservation-item:hover {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 
+        0 20px 40px var(--shadow-lg),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      border-color: var(--accent);
+    }
+
+    .reservation-item:hover::before {
+      opacity: 1;
+    }
+
     #confirmationModal {
-      display: none; position: fixed; z-index: 1000;
-      left: 0; top: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(12px);
     }
+
     #confirmationModal .modal-content {
-      background: white;
-      margin: 15% auto;
-      padding: 20px;
-      border-radius: 14px;
+      background: 
+        linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+      margin: 8% auto;
+      padding: 3rem;
+      border-radius: 28px;
       width: 90%;
-      max-width: 400px;
+      max-width: 500px;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      color: var(--text-primary);
+      box-shadow: 
+        0 30px 60px var(--shadow-lg),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      position: relative;
+      animation: modalSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
     }
+
+    /* Enhanced modal animation */
+    @keyframes modalSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-100px) scale(0.8) rotateX(15deg);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotateX(0deg);
+      }
+    }
+
     #confirmationModal .close {
-      float: right;
-      font-size: 22px;
+      position: absolute;
+      top: 1.5rem;
+      right: 2rem;
+      font-size: 1.75rem;
       cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    #confirmationModal .close:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.1);
+      transform: scale(1.1);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 1rem;
+        padding: 2rem;
+      }
+
+      header h1 {
+        font-size: 2.5rem;
+      }
+
+      #calendar {
+        gap: 0.75rem;
+        padding: 1rem;
+      }
+
+      .day {
+        min-height: 90px;
+        padding: 1rem;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+    /* Enhanced scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--background);
+      border-radius: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 6px;
+      border: 2px solid var(--background);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, var(--primary-hover), var(--accent-light));
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🌿 Chalet Reservation System</h1>
+    <h1>الجوهرة</h1>
   </header>
 
   <div class="container">
     <h2 id="monthDisplay"></h2>
     <div class="actions">
-      <button id="prevBtn" class="btn light">⟵ Prev</button>
-      <button id="todayBtn" class="btn primary">Today</button>
-      <button id="nextBtn" class="btn light">Next ⟶</button>
+      <button id="prevBtn" class="btn light">⟵ السابق</button>
+      <button id="todayBtn" class="btn primary">اليوم</button>
+      <button id="nextBtn" class="btn light">التالي ⟶</button>
     </div>
     <div id="calendar"></div>
   </div>
 
   <div class="container" id="reserve">
-    <h2>📅 Book a Reservation</h2>
+    <h2>📅 حجز جديد</h2>
     <form id="reservationForm">
       <div class="form-grid">
         <div>
-          <label for="name">Your Name</label>
+          <label for="name">الاسم</label>
           <input type="text" id="name" name="name" required />
         </div>
         <div>
-          <label for="checkin">Date</label>
+          <label for="checkin">التاريخ</label>
           <input type="date" id="checkin" name="checkin" required />
         </div>
       </div>
       <div class="actions">
-        <button type="submit" class="btn primary">Reserve</button>
+        <button type="submit" class="btn primary">احجز الآن</button>
       </div>
     </form>
   </div>
 
   <div class="container">
-    <h2>🔍 Find Your Reservation</h2>
+    <h2>🔍 البحث عن الحجز</h2>
     <div class="form-grid">
-      <input type="text" id="searchName" placeholder="Enter your name" />
-      <button id="searchBtn" class="btn primary">Search</button>
+      <input type="text" id="searchName" placeholder="اكتب اسمك" />
+      <button id="searchBtn" class="btn primary">ابحث</button>
     </div>
     <div id="reservationResults" style="margin-top:12px;"></div>
   </div>
@@ -165,47 +761,35 @@
   <div id="confirmationModal">
     <div class="modal-content">
       <span id="closeModalBtn" class="close">&times;</span>
-      <h3>🎉 Reservation Confirmed!</h3>
+      <h3>✅ تم تأكيد الحجز</h3>
       <div id="bookingDetails"></div>
     </div>
   </div>
 
   <script>
-    // ✅ Your Render backend URL
-    const API_BASE = "https://chaletf.onrender.com";
-
     let reservations = {}; 
     let current = new Date();
 
     async function fetchReservations() {
-      try {
-        const res = await fetch(`${API_BASE}/api/reservations`);
-        reservations = res.ok ? await res.json() : {};
-      } catch (err) {
-        console.warn("⚠️ API not available, showing empty calendar", err);
-        reservations = {};
-      }
+      const res = await fetch("/api/reservations");
+      reservations = await res.json();
     }
-
     async function createReservation(name, date) {
-      const res = await fetch(`${API_BASE}/api/reservations`, {
+      const res = await fetch("/api/reservations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, date })
       });
       return res.json();
     }
-
     async function deleteReservation(date) {
-      const res = await fetch(`${API_BASE}/api/reservations/${date}`, { method: "DELETE" });
+      const res = await fetch(`/api/reservations/${date}`, { method: "DELETE" });
       return res.json();
     }
-
     async function searchReservations(query) {
-      const res = await fetch(`${API_BASE}/api/reservations/search?name=${encodeURIComponent(query)}`);
+      const res = await fetch(`/api/reservations/search?name=${encodeURIComponent(query)}`);
       return res.json();
     }
-
     function pad(n){ return String(n).padStart(2,'0'); }
     function ymd(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 
@@ -216,8 +800,8 @@
 
       const year = date.getFullYear();
       const month = date.getMonth();
-      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      const dow = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
       monthDisplay.textContent = `${monthNames[month]} ${year}`;
 
       dow.forEach(d => {
@@ -256,7 +840,7 @@
           nameEl.className = 'resv-name';
           nameEl.textContent = reservations[key].name;
           cell.appendChild(nameEl);
-          cell.title = `Reserved by: ${reservations[key].name}`;
+          cell.title = `محجوز بواسطة: ${reservations[key].name}`;
         } else {
           cell.classList.add('available');
           if (thisDate >= today) {
@@ -267,14 +851,52 @@
             });
           } else {
             cell.classList.remove('available');
-            cell.style.background = '#f1f1f1';
-            cell.style.color = '#9aa0a6';
+            cell.style.background = '#1c1c1c';
+            cell.style.color = '#777';
             cell.style.cursor = 'not-allowed';
-            cell.title = 'Past date';
+            cell.title = 'تاريخ قديم';
           }
         }
         if (ymd(thisDate) === ymd(today)) cell.classList.add('today');
         calendar.appendChild(cell);
+      }
+    }
+
+    function showConfirmation(data) {
+      const modal = document.getElementById('confirmationModal');
+      const details = document.getElementById('bookingDetails');
+      const checkinDate = new Date(data.checkin).toLocaleDateString();
+      details.innerHTML = `<p><strong>الاسم:</strong> ${data.name}</p><p><strong>التاريخ:</strong> ${checkinDate}</p>`;
+      modal.style.display = 'block';
+    }
+    function closeModal(){ document.getElementById('confirmationModal').style.display = 'none'; }
+
+    function renderSearchResults(list){
+      const resultsDiv = document.getElementById('reservationResults');
+      if (!Object.keys(list).length) {
+        resultsDiv.innerHTML = '<p style="color:#aaa">لا يوجد حجوزات بالاسم المدخل.</p>';
+        return;
+      }
+      let html = '';
+      Object.entries(list).forEach(([dateString, reservation]) => {
+        const formatted = new Date(dateString).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+        html += `
+          <div class="reservation-item">
+            <div><strong>الاسم:</strong> ${reservation.name}</div>
+            <div><strong>التاريخ:</strong> ${formatted}</div>
+            <div class="actions"><button class="btn danger" onclick="cancelReservation('${dateString}')">إلغاء</button></div>
+          </div>`;
+      });
+      resultsDiv.innerHTML = html;
+    }
+
+    window.cancelReservation = async function(dateString){
+      if (!reservations[dateString]) return alert('لم يتم العثور على الحجز.');
+      if (confirm('هل تريد إلغاء هذا الحجز؟')) {
+        await deleteReservation(dateString);
+        await fetchReservations();
+        buildCalendar(current);
+        document.getElementById('reservationResults').innerHTML = '<p style="color:#0f0">تم إلغاء الحجز.</p>';
       }
     }
 
@@ -284,9 +906,9 @@
       const todayStr = new Date().toISOString().split('T')[0];
       dateInput.min = todayStr;
 
-      document.getElementById('prevBtn').addEventListener('click', () => { current.setMonth(current.getMonth() - 1); buildCalendar(current); });
-      document.getElementById('nextBtn').addEventListener('click', () => { current.setMonth(current.getMonth() + 1); buildCalendar(current); });
-      document.getElementById('todayBtn').addEventListener('click', () => { current = new Date(); buildCalendar(current); });
+      document.getElementById('prevBtn').addEventListener('click', async () => { current.setMonth(current.getMonth() - 1); buildCalendar(current); });
+      document.getElementById('nextBtn').addEventListener('click', async () => { current.setMonth(current.getMonth() + 1); buildCalendar(current); });
+      document.getElementById('todayBtn').addEventListener('click', async () => { current = new Date(); buildCalendar(current); });
 
       buildCalendar(current);
 
@@ -295,48 +917,26 @@
         const form = e.currentTarget;
         const name = form.name.value.trim();
         const checkin = form.checkin.value;
-        if (!name || !checkin) return alert('Please complete the form.');
-        if (reservations[checkin]) return alert('This date is already reserved.');
+        if (!name || !checkin) return alert('الرجاء إكمال البيانات.');
+        if (reservations[checkin]) return alert('هذا التاريخ محجوز بالفعل.');
         const resp = await createReservation(name, checkin);
         if (resp.error) return alert(resp.error);
         await fetchReservations();
         buildCalendar(current);
-        alert("🎉 Reservation confirmed!");
+        showConfirmation({ name, checkin });
         form.reset();
       });
 
+      document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+      window.addEventListener('click', (e) => { if (e.target.id === 'confirmationModal') closeModal(); });
+
       document.getElementById('searchBtn').addEventListener('click', async () => {
         const q = document.getElementById('searchName').value.trim();
-        if (!q) return alert('Please enter a name to search.');
+        if (!q) return alert('أدخل اسم للبحث.');
         const found = await searchReservations(q);
-        const resultsDiv = document.getElementById('reservationResults');
-        if (!Object.keys(found).length) {
-          resultsDiv.innerHTML = "<p style='color:#666'>No reservations found.</p>";
-          return;
-        }
-        let html = '';
-        Object.entries(found).forEach(([dateString, reservation]) => {
-          const formatted = new Date(dateString).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-          html += `
-            <div class="reservation-item">
-              <div><strong>Name:</strong> ${reservation.name}</div>
-              <div><strong>Date:</strong> ${formatted}</div>
-              <div class="actions"><button class="btn danger" onclick="cancelReservation('${dateString}')">Cancel</button></div>
-            </div>`;
-        });
-        resultsDiv.innerHTML = html;
+        renderSearchResults(found);
       });
     });
-
-    window.cancelReservation = async function(dateString){
-      if (!reservations[dateString]) return alert('Reservation not found.');
-      if (confirm('Cancel this reservation?')) {
-        await deleteReservation(dateString);
-        await fetchReservations();
-        buildCalendar(current);
-        document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled. Search again to refresh.</p>';
-      }
-    }
   </script>
 </body>
 </html>
