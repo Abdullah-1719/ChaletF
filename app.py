@@ -1,91 +1,68 @@
-import os
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from datetime import datetime
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=".", static_url_path="")
 CORS(app)
 
-# === Database Setup ===
-uri = os.getenv("DATABASE_URL")
+# ✅ Database config (Render gives DATABASE_URL as env variable)
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/chaletdb")
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Fix prefix if needed
-if uri and uri.startswith("postgres://"):
-    uri = uri.replace("postgres://", "postgresql://", 1)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = uri
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
 db = SQLAlchemy(app)
 
-# === Reservation Model ===
+# ✅ Reservation model
 class Reservation(db.Model):
-    __tablename__ = "reservations"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    date = db.Column(db.String(20), nullable=False, unique=True)  # YYYY-MM-DD format
+    name = db.Column(db.String(100), nullable=False)
+    date = db.Column(db.String(20), unique=True, nullable=False)
 
-    def to_dict(self):
-        return {"id": self.id, "name": self.name, "date": self.date}
-
-
-# === Create Tables on Startup ===
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
-
-# === Routes ===
-@app.route("/")
-def index():
-    return render_template("chalet.html")  # Your frontend file
-
-
+# ✅ API routes
 @app.route("/api/reservations", methods=["GET"])
 def get_reservations():
     reservations = Reservation.query.all()
-    return jsonify({r.date: r.to_dict() for r in reservations})
-
+    return jsonify({r.date: {"name": r.name} for r in reservations})
 
 @app.route("/api/reservations", methods=["POST"])
-def add_reservation():
-    data = request.get_json()
+def create_reservation():
+    data = request.json
     name = data.get("name")
     date = data.get("date")
 
-    if not name or not date:
-        return jsonify({"error": "Name and Date are required"}), 400
-
-    # Check if already booked
     if Reservation.query.filter_by(date=date).first():
-        return jsonify({"error": "Date already reserved"}), 400
+        return jsonify({"error": "This date is already reserved"}), 400
 
-    new_res = Reservation(name=name, date=date)
-    db.session.add(new_res)
+    new_reservation = Reservation(name=name, date=date)
+    db.session.add(new_reservation)
     db.session.commit()
-
-    return jsonify(new_res.to_dict()), 201
-
+    return jsonify({"message": "Reservation created", "name": name, "date": date})
 
 @app.route("/api/reservations/<date>", methods=["DELETE"])
 def delete_reservation(date):
-    res = Reservation.query.filter_by(date=date).first()
-    if not res:
+    reservation = Reservation.query.filter_by(date=date).first()
+    if not reservation:
         return jsonify({"error": "Reservation not found"}), 404
-
-    db.session.delete(res)
+    db.session.delete(reservation)
     db.session.commit()
-    return jsonify({"message": "Reservation cancelled"}), 200
+    return jsonify({"message": "Reservation deleted"})
 
-
-@app.route("/api/reservations/search", methods=["GET"])
-def search_reservation():
+@app.route("/api/reservations/search")
+def search_reservations():
     name = request.args.get("name")
     results = Reservation.query.filter(Reservation.name.ilike(f"%{name}%")).all()
-    return jsonify({r.date: r.to_dict() for r in results})
+    return jsonify({r.date: {"name": r.name} for r in results})
 
+# ✅ Serve frontend (chalet.html)
+@app.route("/")
+def index():
+    return send_from_directory(".", "chalet.html")
 
-# === Run Local ===
+# ✅ Run + ensure tables are created
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()  # 👈 ensures PostgreSQL tables exist
     app.run(host="0.0.0.0", port=5000)
