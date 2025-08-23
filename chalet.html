@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chalet Reservation</title>
   <style>
-    /* ===== General ===== */
     body {
       font-family: "Segoe UI", Roboto, sans-serif;
       background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
@@ -36,8 +35,6 @@
       margin-bottom: 12px;
       color: #2e7d32;
     }
-
-    /* ===== Calendar ===== */
     #calendar {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -67,8 +64,6 @@
     .day.today { border: 2px solid #43a047; }
     .num { font-weight: bold; font-size: 16px; }
     .resv-name { margin-top: 6px; font-size: 13px; color: #555; font-style: italic; }
-
-    /* ===== Buttons ===== */
     .btn {
       padding: 8px 16px;
       border: none;
@@ -84,10 +79,7 @@
     .btn.danger:hover { background: #c62828; }
     .btn.light { background: #f1f1f1; }
     .btn.light:hover { background: #e0e0e0; }
-
     .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-
-    /* ===== Form ===== */
     .form-grid { display: grid; gap: 16px; margin-top: 10px; }
     input {
       width: 100%;
@@ -97,8 +89,6 @@
       font-size: 15px;
     }
     input:focus { border-color: #43a047; outline: none; box-shadow: 0 0 4px rgba(67,160,71,0.4); }
-
-    /* ===== Reservation items ===== */
     .reservation-item {
       border: 1px solid #ddd;
       padding: 12px;
@@ -107,8 +97,6 @@
       background: #fafafa;
       box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
-
-    /* ===== Modal ===== */
     #confirmationModal {
       display: none; position: fixed; z-index: 1000;
       left: 0; top: 0; width: 100%; height: 100%;
@@ -128,13 +116,6 @@
       float: right;
       font-size: 22px;
       cursor: pointer;
-    }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-      #calendar { grid-template-columns: repeat(7, 1fr); gap: 4px; }
-      .day { min-height: 65px; font-size: 12px; }
-      .btn { flex: 1; }
     }
   </style>
 </head>
@@ -181,7 +162,6 @@
     <div id="reservationResults" style="margin-top:12px;"></div>
   </div>
 
-  <!-- Confirmation Modal -->
   <div id="confirmationModal">
     <div class="modal-content">
       <span id="closeModalBtn" class="close">&times;</span>
@@ -190,29 +170,39 @@
     </div>
   </div>
 
-  <!-- Same script logic as before (syncs with Flask backend) -->
   <script>
+    // 👉 Change this to your Render backend URL
+    const API_BASE = "https://chalet-backend.onrender.com";
+
     let reservations = {}; 
     let current = new Date();
 
     async function fetchReservations() {
-      const res = await fetch("/api/reservations");
-      reservations = await res.json();
+      try {
+        const res = await fetch(`${API_BASE}/api/reservations`);
+        reservations = res.ok ? await res.json() : {};
+      } catch (err) {
+        console.warn("⚠️ API not available, showing empty calendar", err);
+        reservations = {};
+      }
     }
+
     async function createReservation(name, date) {
-      const res = await fetch("/api/reservations", {
+      const res = await fetch(`${API_BASE}/api/reservations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, date })
       });
       return res.json();
     }
+
     async function deleteReservation(date) {
-      const res = await fetch(`/api/reservations/${date}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/reservations/${date}`, { method: "DELETE" });
       return res.json();
     }
+
     async function searchReservations(query) {
-      const res = await fetch(`/api/reservations/search?name=${encodeURIComponent(query)}`);
+      const res = await fetch(`${API_BASE}/api/reservations/search?name=${encodeURIComponent(query)}`);
       return res.json();
     }
 
@@ -288,53 +278,15 @@
       }
     }
 
-    function showConfirmation(data) {
-      const modal = document.getElementById('confirmationModal');
-      const details = document.getElementById('bookingDetails');
-      const checkinDate = new Date(data.checkin).toLocaleDateString();
-      details.innerHTML = `<p><strong>Name:</strong> ${data.name}</p><p><strong>Reservation Date:</strong> ${checkinDate}</p>`;
-      modal.style.display = 'block';
-    }
-    function closeModal(){ document.getElementById('confirmationModal').style.display = 'none'; }
-
-    function renderSearchResults(list){
-      const resultsDiv = document.getElementById('reservationResults');
-      if (!Object.keys(list).length) {
-        resultsDiv.innerHTML = '<p style="color:#6b7280">No reservations found for this name.</p>';
-        return;
-      }
-      let html = '';
-      Object.entries(list).forEach(([dateString, reservation]) => {
-        const formatted = new Date(dateString).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-        html += `
-          <div class="reservation-item">
-            <div><strong>Name:</strong> ${reservation.name}</div>
-            <div><strong>Date:</strong> ${formatted}</div>
-            <div class="actions"><button class="btn danger" onclick="cancelReservation('${dateString}')">Cancel</button></div>
-          </div>`;
-      });
-      resultsDiv.innerHTML = html;
-    }
-
-    window.cancelReservation = async function(dateString){
-      if (!reservations[dateString]) return alert('Reservation not found.');
-      if (confirm('Cancel this reservation?')) {
-        await deleteReservation(dateString);
-        await fetchReservations();
-        buildCalendar(current);
-        document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled. Search again to refresh.</p>';
-      }
-    }
-
     document.addEventListener('DOMContentLoaded', async () => {
       await fetchReservations();
       const dateInput = document.getElementById('checkin');
       const todayStr = new Date().toISOString().split('T')[0];
       dateInput.min = todayStr;
 
-      document.getElementById('prevBtn').addEventListener('click', async () => { current.setMonth(current.getMonth() - 1); buildCalendar(current); });
-      document.getElementById('nextBtn').addEventListener('click', async () => { current.setMonth(current.getMonth() + 1); buildCalendar(current); });
-      document.getElementById('todayBtn').addEventListener('click', async () => { current = new Date(); buildCalendar(current); });
+      document.getElementById('prevBtn').addEventListener('click', () => { current.setMonth(current.getMonth() - 1); buildCalendar(current); });
+      document.getElementById('nextBtn').addEventListener('click', () => { current.setMonth(current.getMonth() + 1); buildCalendar(current); });
+      document.getElementById('todayBtn').addEventListener('click', () => { current = new Date(); buildCalendar(current); });
 
       buildCalendar(current);
 
@@ -349,20 +301,42 @@
         if (resp.error) return alert(resp.error);
         await fetchReservations();
         buildCalendar(current);
-        showConfirmation({ name, checkin });
+        alert("🎉 Reservation confirmed!");
         form.reset();
       });
-
-      document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-      window.addEventListener('click', (e) => { if (e.target.id === 'confirmationModal') closeModal(); });
 
       document.getElementById('searchBtn').addEventListener('click', async () => {
         const q = document.getElementById('searchName').value.trim();
         if (!q) return alert('Please enter a name to search.');
         const found = await searchReservations(q);
-        renderSearchResults(found);
+        const resultsDiv = document.getElementById('reservationResults');
+        if (!Object.keys(found).length) {
+          resultsDiv.innerHTML = "<p style='color:#666'>No reservations found.</p>";
+          return;
+        }
+        let html = '';
+        Object.entries(found).forEach(([dateString, reservation]) => {
+          const formatted = new Date(dateString).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+          html += `
+            <div class="reservation-item">
+              <div><strong>Name:</strong> ${reservation.name}</div>
+              <div><strong>Date:</strong> ${formatted}</div>
+              <div class="actions"><button class="btn danger" onclick="cancelReservation('${dateString}')">Cancel</button></div>
+            </div>`;
+        });
+        resultsDiv.innerHTML = html;
       });
     });
+
+    window.cancelReservation = async function(dateString){
+      if (!reservations[dateString]) return alert('Reservation not found.');
+      if (confirm('Cancel this reservation?')) {
+        await deleteReservation(dateString);
+        await fetchReservations();
+        buildCalendar(current);
+        document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled. Search again to refresh.</p>';
+      }
+    }
   </script>
 </body>
 </html>
