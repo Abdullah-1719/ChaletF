@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Use database URL from environment variable (Render provides it)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("postgresql://chaletdb_user:LsRIQ8uCcwJGjaQ0zchrO3bLWozqQzvU@dpg-d2jhdendiees73c889ug-a/chaletdbL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
