@@ -1,70 +1,60 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
 import os
 
-app = Flask(__name__, static_folder="static", template_folder=".")
+app = Flask(__name__)
 CORS(app)
 
-# In-memory reservation store
-reservations = {}
+# Use database URL from environment variable (Render provides it)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Serve frontend
-@app.route("/")
-def index():
-    return send_from_directory(".", "chalet.html")
+db = SQLAlchemy(app)
 
-# API: get all reservations
+# Reservation model
+class Reservation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    date = db.Column(db.String(20), unique=True, nullable=False)
+
+# Create tables (only first run)
+with app.app_context():
+    db.create_all()
+
 @app.route("/api/reservations", methods=["GET"])
 def get_reservations():
-    return jsonify(reservations)
+    reservations = Reservation.query.all()
+    return jsonify({r.date: {"name": r.name} for r in reservations})
 
-# API: create reservation
 @app.route("/api/reservations", methods=["POST"])
 def create_reservation():
-    data = request.get_json()
+    data = request.json
     name = data.get("name")
     date = data.get("date")
 
-    if not name or not date:
-        return jsonify({"error": "Missing name or date"}), 400
-    if date in reservations:
+    if Reservation.query.filter_by(date=date).first():
         return jsonify({"error": "Date already reserved"}), 400
 
-    reservations[date] = {"name": name, "date": date}
-    return jsonify({"message": "Reservation created", "reservation": reservations[date]}), 201
+    new_reservation = Reservation(name=name, date=date)
+    db.session.add(new_reservation)
+    db.session.commit()
+    return jsonify({"success": True, "name": name, "date": date})
 
-# API: update reservation
-@app.route("/api/reservations/<date>", methods=["PUT"])
-def update_reservation(date):
-    if date not in reservations:
-        return jsonify({"error": "Reservation not found"}), 404
-
-    data = request.get_json()
-    new_name = data.get("name", reservations[date]["name"])
-    new_date = data.get("date", date)
-
-    if new_date != date and new_date in reservations:
-        return jsonify({"error": "New date already reserved"}), 400
-
-    reservations.pop(date)
-    reservations[new_date] = {"name": new_name, "date": new_date}
-    return jsonify({"message": "Reservation updated", "reservation": reservations[new_date]})
-
-# API: delete reservation
 @app.route("/api/reservations/<date>", methods=["DELETE"])
 def delete_reservation(date):
-    if date not in reservations:
-        return jsonify({"error": "Reservation not found"}), 404
-    reservations.pop(date)
-    return jsonify({"message": "Reservation deleted"})
+    reservation = Reservation.query.filter_by(date=date).first()
+    if reservation:
+        db.session.delete(reservation)
+        db.session.commit()
+        return jsonify({"success": True})
+    return jsonify({"error": "Not found"}), 404
 
-# API: search reservations by name
-@app.route("/api/reservations/search", methods=["GET"])
-def search_reservation():
-    query = request.args.get("name", "").lower()
-    results = {d: r for d, r in reservations.items() if query in r["name"].lower()}
-    return jsonify(results)
+@app.route("/api/reservations/search")
+def search_reservations():
+    name = request.args.get("name", "")
+    results = Reservation.query.filter(Reservation.name.ilike(f"%{name}%")).all()
+    return jsonify({r.date: {"name": r.name} for r in results})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=5000)
