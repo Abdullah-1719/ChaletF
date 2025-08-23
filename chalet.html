@@ -1,40 +1,42 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chalet Reservation</title>
+  <title>الجوهرة - Chalet Reservation</title>
   <style>
-    /* ===== General ===== */
+    /* ===== General Dark Theme ===== */
     body {
-      font-family: "Segoe UI", Roboto, sans-serif;
-      background: linear-gradient(135deg, #e0f7fa, #f1f8e9);
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(135deg, #1c1c1e, #2c2c2e);
       margin: 0;
       padding: 0;
-      color: #2c3e50;
+      color: #e0e0e0;
     }
     header {
-      background: linear-gradient(90deg, #43a047, #2e7d32);
+      background: linear-gradient(90deg, #2e7d32, #1b5e20);
       color: white;
-      padding: 1.5rem;
+      padding: 1.8rem;
       text-align: center;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
     }
     header h1 {
       margin: 0;
-      font-size: 1.8rem;
+      font-size: 2rem;
+      font-weight: bold;
+      letter-spacing: 2px;
     }
     .container {
       max-width: 900px;
       margin: 25px auto;
       padding: 24px;
-      background: white;
+      background: #2c2c2e;
       border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
     h2, h3 {
       margin-bottom: 12px;
-      color: #2e7d32;
+      color: #81c784;
     }
 
     /* ===== Calendar ===== */
@@ -48,8 +50,9 @@
       font-weight: bold;
       text-align: center;
       padding: 6px;
-      background: #f1f8e9;
+      background: #333;
       border-radius: 6px;
+      color: #a5d6a7;
     }
     .day {
       padding: 12px;
@@ -57,33 +60,32 @@
       min-height: 80px;
       text-align: center;
       font-size: 14px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      background: #3a3a3c;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .day:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .day:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
     .day.empty { background: transparent; box-shadow: none; cursor: default; }
-    .day.available { background: #e8f5e9; border: 1px solid #c8e6c9; cursor: pointer; }
-    .day.booked { background: #ffebee; border: 1px solid #ef9a9a; color: #c62828; cursor: not-allowed; }
+    .day.available { background: #1b5e20; color: #e0e0e0; cursor: pointer; }
+    .day.booked { background: #b71c1c; color: #fff; cursor: not-allowed; }
     .day.today { border: 2px solid #43a047; }
     .num { font-weight: bold; font-size: 16px; }
-    .resv-name { margin-top: 6px; font-size: 13px; color: #555; font-style: italic; }
+    .resv-name { margin-top: 6px; font-size: 13px; color: #f1f1f1; font-style: italic; }
 
     /* ===== Buttons ===== */
     .btn {
-      padding: 8px 16px;
+      padding: 10px 18px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 500;
-      transition: background 0.2s, transform 0.1s;
+      transition: all 0.2s;
     }
-    .btn:hover { transform: scale(1.05); }
-    .btn.primary { background: #43a047; color: white; }
-    .btn.primary:hover { background: #2e7d32; }
-    .btn.danger { background: #e53935; color: white; }
-    .btn.danger:hover { background: #c62828; }
-    .btn.light { background: #f1f1f1; }
-    .btn.light:hover { background: #e0e0e0; }
+    .btn.primary { background: #2e7d32; color: white; }
+    .btn.primary:hover { background: #43a047; box-shadow: 0 0 8px rgba(67,160,71,0.7); }
+    .btn.danger { background: #c62828; color: white; }
+    .btn.danger:hover { background: #e53935; box-shadow: 0 0 8px rgba(229,57,53,0.7); }
+    .btn.light { background: #444; color: #eee; }
+    .btn.light:hover { background: #555; }
 
     .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
 
@@ -91,38 +93,41 @@
     .form-grid { display: grid; gap: 16px; margin-top: 10px; }
     input {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       border-radius: 8px;
-      border: 1px solid #ccc;
+      border: 1px solid #555;
       font-size: 15px;
+      background: #1c1c1e;
+      color: #e0e0e0;
     }
-    input:focus { border-color: #43a047; outline: none; box-shadow: 0 0 4px rgba(67,160,71,0.4); }
+    input:focus { border-color: #43a047; outline: none; box-shadow: 0 0 6px rgba(67,160,71,0.7); }
 
     /* ===== Reservation items ===== */
     .reservation-item {
-      border: 1px solid #ddd;
+      border: 1px solid #555;
       padding: 12px;
       margin-bottom: 10px;
       border-radius: 10px;
-      background: #fafafa;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      background: #333;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
 
     /* ===== Modal ===== */
     #confirmationModal {
       display: none; position: fixed; z-index: 1000;
       left: 0; top: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.6);
     }
     #confirmationModal .modal-content {
-      background: white;
+      background: #2c2c2e;
       margin: 15% auto;
       padding: 20px;
       border-radius: 14px;
       width: 90%;
       max-width: 400px;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      color: #e0e0e0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.7);
     }
     #confirmationModal .close {
       float: right;
@@ -140,43 +145,43 @@
 </head>
 <body>
   <header>
-    <h1>🌿 Chalet Reservation System</h1>
+    <h1>الجوهرة</h1>
   </header>
 
   <div class="container">
     <h2 id="monthDisplay"></h2>
     <div class="actions">
-      <button id="prevBtn" class="btn light">⟵ Prev</button>
-      <button id="todayBtn" class="btn primary">Today</button>
-      <button id="nextBtn" class="btn light">Next ⟶</button>
+      <button id="prevBtn" class="btn light">⟵ السابق</button>
+      <button id="todayBtn" class="btn primary">اليوم</button>
+      <button id="nextBtn" class="btn light">التالي ⟶</button>
     </div>
     <div id="calendar"></div>
   </div>
 
   <div class="container" id="reserve">
-    <h2>📅 Book a Reservation</h2>
+    <h2>📅 حجز جديد</h2>
     <form id="reservationForm">
       <div class="form-grid">
         <div>
-          <label for="name">Your Name</label>
+          <label for="name">الاسم</label>
           <input type="text" id="name" name="name" required />
         </div>
         <div>
-          <label for="checkin">Date</label>
+          <label for="checkin">التاريخ</label>
           <input type="date" id="checkin" name="checkin" required />
         </div>
       </div>
       <div class="actions">
-        <button type="submit" class="btn primary">Reserve</button>
+        <button type="submit" class="btn primary">احجز الآن</button>
       </div>
     </form>
   </div>
 
   <div class="container">
-    <h2>🔍 Find Your Reservation</h2>
+    <h2>🔍 البحث عن الحجز</h2>
     <div class="form-grid">
-      <input type="text" id="searchName" placeholder="Enter your name" />
-      <button id="searchBtn" class="btn primary">Search</button>
+      <input type="text" id="searchName" placeholder="اكتب اسمك" />
+      <button id="searchBtn" class="btn primary">ابحث</button>
     </div>
     <div id="reservationResults" style="margin-top:12px;"></div>
   </div>
@@ -185,184 +190,12 @@
   <div id="confirmationModal">
     <div class="modal-content">
       <span id="closeModalBtn" class="close">&times;</span>
-      <h3>🎉 Reservation Confirmed!</h3>
+      <h3>🎉 تم تأكيد الحجز</h3>
       <div id="bookingDetails"></div>
     </div>
   </div>
 
-  <!-- Same script logic as before (syncs with Flask backend) -->
-  <script>
-    let reservations = {}; 
-    let current = new Date();
-
-    async function fetchReservations() {
-      const res = await fetch("/api/reservations");
-      reservations = await res.json();
-    }
-    async function createReservation(name, date) {
-      const res = await fetch("/api/reservations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, date })
-      });
-      return res.json();
-    }
-    async function deleteReservation(date) {
-      const res = await fetch(`/api/reservations/${date}`, { method: "DELETE" });
-      return res.json();
-    }
-    async function searchReservations(query) {
-      const res = await fetch(`/api/reservations/search?name=${encodeURIComponent(query)}`);
-      return res.json();
-    }
-
-    function pad(n){ return String(n).padStart(2,'0'); }
-    function ymd(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-
-    function buildCalendar(date) {
-      const calendar = document.getElementById('calendar');
-      const monthDisplay = document.getElementById('monthDisplay');
-      calendar.innerHTML = '';
-
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-      monthDisplay.textContent = `${monthNames[month]} ${year}`;
-
-      dow.forEach(d => {
-        const h = document.createElement('div');
-        h.className = 'dow';
-        h.textContent = d;
-        calendar.appendChild(h);
-      });
-
-      const first = new Date(year, month, 1);
-      const startOffset = first.getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-      for (let i = 0; i < startOffset; i++) {
-        const e = document.createElement('div');
-        e.className = 'day empty';
-        calendar.appendChild(e);
-      }
-
-      const today = new Date(); today.setHours(0,0,0,0);
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const cell = document.createElement('div');
-        cell.className = 'day';
-        const num = document.createElement('div');
-        num.className = 'num';
-        num.textContent = day;
-        cell.appendChild(num);
-
-        const thisDate = new Date(year, month, day);
-        const key = ymd(thisDate);
-
-        if (reservations[key]) {
-          cell.classList.add('booked');
-          const nameEl = document.createElement('div');
-          nameEl.className = 'resv-name';
-          nameEl.textContent = reservations[key].name;
-          cell.appendChild(nameEl);
-          cell.title = `Reserved by: ${reservations[key].name}`;
-        } else {
-          cell.classList.add('available');
-          if (thisDate >= today) {
-            cell.addEventListener('click', () => {
-              const input = document.getElementById('checkin');
-              input.value = key;
-              document.getElementById('reserve').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-          } else {
-            cell.classList.remove('available');
-            cell.style.background = '#f1f1f1';
-            cell.style.color = '#9aa0a6';
-            cell.style.cursor = 'not-allowed';
-            cell.title = 'Past date';
-          }
-        }
-        if (ymd(thisDate) === ymd(today)) cell.classList.add('today');
-        calendar.appendChild(cell);
-      }
-    }
-
-    function showConfirmation(data) {
-      const modal = document.getElementById('confirmationModal');
-      const details = document.getElementById('bookingDetails');
-      const checkinDate = new Date(data.checkin).toLocaleDateString();
-      details.innerHTML = `<p><strong>Name:</strong> ${data.name}</p><p><strong>Reservation Date:</strong> ${checkinDate}</p>`;
-      modal.style.display = 'block';
-    }
-    function closeModal(){ document.getElementById('confirmationModal').style.display = 'none'; }
-
-    function renderSearchResults(list){
-      const resultsDiv = document.getElementById('reservationResults');
-      if (!Object.keys(list).length) {
-        resultsDiv.innerHTML = '<p style="color:#6b7280">No reservations found for this name.</p>';
-        return;
-      }
-      let html = '';
-      Object.entries(list).forEach(([dateString, reservation]) => {
-        const formatted = new Date(dateString).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-        html += `
-          <div class="reservation-item">
-            <div><strong>Name:</strong> ${reservation.name}</div>
-            <div><strong>Date:</strong> ${formatted}</div>
-            <div class="actions"><button class="btn danger" onclick="cancelReservation('${dateString}')">Cancel</button></div>
-          </div>`;
-      });
-      resultsDiv.innerHTML = html;
-    }
-
-    window.cancelReservation = async function(dateString){
-      if (!reservations[dateString]) return alert('Reservation not found.');
-      if (confirm('Cancel this reservation?')) {
-        await deleteReservation(dateString);
-        await fetchReservations();
-        buildCalendar(current);
-        document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled. Search again to refresh.</p>';
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      await fetchReservations();
-      const dateInput = document.getElementById('checkin');
-      const todayStr = new Date().toISOString().split('T')[0];
-      dateInput.min = todayStr;
-
-      document.getElementById('prevBtn').addEventListener('click', async () => { current.setMonth(current.getMonth() - 1); buildCalendar(current); });
-      document.getElementById('nextBtn').addEventListener('click', async () => { current.setMonth(current.getMonth() + 1); buildCalendar(current); });
-      document.getElementById('todayBtn').addEventListener('click', async () => { current = new Date(); buildCalendar(current); });
-
-      buildCalendar(current);
-
-      document.getElementById('reservationForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const form = e.currentTarget;
-        const name = form.name.value.trim();
-        const checkin = form.checkin.value;
-        if (!name || !checkin) return alert('Please complete the form.');
-        if (reservations[checkin]) return alert('This date is already reserved.');
-        const resp = await createReservation(name, checkin);
-        if (resp.error) return alert(resp.error);
-        await fetchReservations();
-        buildCalendar(current);
-        showConfirmation({ name, checkin });
-        form.reset();
-      });
-
-      document.getElementById('closeModalBtn').addEventListener('click', closeModal);
-      window.addEventListener('click', (e) => { if (e.target.id === 'confirmationModal') closeModal(); });
-
-      document.getElementById('searchBtn').addEventListener('click', async () => {
-        const q = document.getElementById('searchName').value.trim();
-        if (!q) return alert('Please enter a name to search.');
-        const found = await searchReservations(q);
-        renderSearchResults(found);
-      });
-    });
-  </script>
+  <!-- keep your same script.js logic -->
+  <script src="script.js"></script>
 </body>
 </html>
