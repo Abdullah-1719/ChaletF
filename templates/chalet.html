@@ -47,6 +47,17 @@
       color: #111827;
     }
 
+    /* Debug panel */
+    .debug-panel {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
     /* ===== Calendar ===== */
     #calendar {
       display: grid;
@@ -151,6 +162,7 @@
       border-radius: 8px;
       border: 1px solid #d1d5db;
       font-size: 15px;
+      box-sizing: border-box;
     }
     input:focus {
       border-color: #22c55e;
@@ -189,6 +201,24 @@
     .legend .booked { background: #fecaca; }
     .legend .past { background: #e5e7eb; }
 
+    .success-message {
+      background: #d1fae5;
+      border: 1px solid #a7f3d0;
+      color: #065f46;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    .error-message {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
   </style>
 </head>
 <body>
@@ -198,6 +228,10 @@
   </header>
 
   <div class="container">
+    <div class="debug-panel" id="debugPanel">
+      <strong>Debug Info:</strong><br>
+      <div id="debugContent">Loading...</div>
+    </div>
     <h2 id="monthDisplay"></h2>
     <p>Tap an <strong>Available</strong> day to pre-fill the reservation date.</p>
     <div class="actions">
@@ -215,7 +249,7 @@
 
   <div class="container" id="reserve">
     <h2>Make a Reservation</h2>
-    <p>We’ll contact you within 24 hours to confirm.</p>
+    <p>We'll contact you within 24 hours to confirm.</p>
     <form id="reservationForm">
       <div class="form-grid">
         <div>
@@ -232,6 +266,7 @@
         <button type="reset" class="btn light">Clear</button>
       </div>
     </form>
+    <div id="reservationMessage"></div>
   </div>
 
   <div class="container">
@@ -248,39 +283,102 @@
     let reservations = {}; 
     let current = new Date();
 
+    function updateDebug() {
+      const debugContent = document.getElementById('debugContent');
+      debugContent.innerHTML = `
+        API Base: ${API_BASE}<br>
+        Current reservations count: ${Object.keys(reservations).length}<br>
+        Reservations: ${JSON.stringify(reservations, null, 2)}<br>
+        Current month: ${current.getMonth() + 1}/${current.getFullYear()}
+      `;
+    }
+
+    function showMessage(message, isError = false) {
+      const messageDiv = document.getElementById('reservationMessage');
+      messageDiv.className = isError ? 'error-message' : 'success-message';
+      messageDiv.textContent = message;
+      setTimeout(() => {
+        messageDiv.innerHTML = '';
+        messageDiv.className = '';
+      }, 5000);
+    }
+
     async function fetchReservations() {
       try {
+        console.log('Fetching reservations from:', `${API_BASE}/api/reservations`);
         const res = await fetch(`${API_BASE}/api/reservations`);
-        reservations = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+        console.log('Fetched reservations:', data);
+        reservations = data;
+        updateDebug();
       } catch (err) {
-        console.error("API error", err);
+        console.error("API error fetching reservations:", err);
+        showMessage(`Error loading reservations: ${err.message}`, true);
         reservations = {};
+        updateDebug();
       }
     }
 
     async function createReservation(name, date) {
-      const res = await fetch(`${API_BASE}/api/reservations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, date })
-      });
-      return res.json();
+      try {
+        console.log('Creating reservation:', { name, date });
+        const res = await fetch(`${API_BASE}/api/reservations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, date })
+        });
+        
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        const result = await res.json();
+        console.log('Create reservation response:', result);
+        return result;
+      } catch (err) {
+        console.error("Error creating reservation:", err);
+        throw err;
+      }
     }
 
     async function deleteReservation(date) {
-      const res = await fetch(`${API_BASE}/api/reservations/${date}`, { method: "DELETE" });
-      return res.json();
+      try {
+        const res = await fetch(`${API_BASE}/api/reservations/${date}`, { method: "DELETE" });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      } catch (err) {
+        console.error("Error deleting reservation:", err);
+        throw err;
+      }
     }
 
     async function searchReservations(query) {
-      const res = await fetch(`${API_BASE}/api/reservations/search?name=${encodeURIComponent(query)}`);
-      return res.json();
+      try {
+        const res = await fetch(`${API_BASE}/api/reservations/search?name=${encodeURIComponent(query)}`);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      } catch (err) {
+        console.error("Error searching reservations:", err);
+        return {};
+      }
     }
 
     function pad(n){ return String(n).padStart(2,'0'); }
     function ymd(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 
     function buildCalendar(date) {
+      console.log('Building calendar for:', date.getFullYear(), date.getMonth() + 1);
+      console.log('Current reservations:', reservations);
+      
       const calendar = document.getElementById('calendar');
       const monthDisplay = document.getElementById('monthDisplay');
       calendar.innerHTML = '';
@@ -321,6 +419,8 @@
         const thisDate = new Date(year, month, day);
         const key = ymd(thisDate);
 
+        console.log(`Checking date ${key}:`, reservations[key]);
+
         if (thisDate < today) {
           cell.classList.add('past');
         } else if (reservations[key]) {
@@ -330,6 +430,7 @@
           nameEl.textContent = reservations[key].name;
           cell.appendChild(nameEl);
           cell.title = `Reserved by: ${reservations[key].name}`;
+          console.log(`Date ${key} is booked by:`, reservations[key].name);
         } else {
           cell.classList.add('available');
           cell.addEventListener('click', () => {
@@ -341,6 +442,8 @@
         if (ymd(thisDate) === ymd(today)) cell.classList.add('today');
         calendar.appendChild(cell);
       }
+      
+      updateDebug();
     }
 
     function renderSearchResults(list){
@@ -365,22 +468,39 @@
     window.cancelReservation = async function(dateString){
       if (!reservations[dateString]) return alert('Reservation not found.');
       if (confirm('Cancel this reservation?')) {
-        await deleteReservation(dateString);
-        await fetchReservations();
-        buildCalendar(current);
-        document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled.</p>';
+        try {
+          await deleteReservation(dateString);
+          await fetchReservations();
+          buildCalendar(current);
+          document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled.</p>';
+        } catch (err) {
+          alert(`Error cancelling reservation: ${err.message}`);
+        }
       }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      console.log('Page loaded, initializing...');
       await fetchReservations();
+      
       const dateInput = document.getElementById('checkin');
       const todayStr = new Date().toISOString().split('T')[0];
       dateInput.min = todayStr;
 
-      document.getElementById('prevBtn').addEventListener('click', async () => { current.setMonth(current.getMonth() - 1); buildCalendar(current); });
-      document.getElementById('nextBtn').addEventListener('click', async () => { current.setMonth(current.getMonth() + 1); buildCalendar(current); });
-      document.getElementById('todayBtn').addEventListener('click', async () => { current = new Date(); buildCalendar(current); });
+      document.getElementById('prevBtn').addEventListener('click', () => { 
+        current.setMonth(current.getMonth() - 1); 
+        buildCalendar(current); 
+      });
+      
+      document.getElementById('nextBtn').addEventListener('click', () => { 
+        current.setMonth(current.getMonth() + 1); 
+        buildCalendar(current); 
+      });
+      
+      document.getElementById('todayBtn').addEventListener('click', () => { 
+        current = new Date(); 
+        buildCalendar(current); 
+      });
 
       buildCalendar(current);
 
@@ -389,18 +509,46 @@
         const form = e.currentTarget;
         const name = form.name.value.trim();
         const checkin = form.checkin.value;
-        if (!name || !checkin) return alert('Please complete the form.');
-        if (reservations[checkin]) return alert('This date is already reserved.');
-        const resp = await createReservation(name, checkin);
-        if (resp.error) return alert(resp.error);
-        await fetchReservations();
-        buildCalendar(current);
-        form.reset();
+        
+        console.log('Form submitted:', { name, checkin });
+        
+        if (!name || !checkin) {
+          showMessage('Please complete the form.', true);
+          return;
+        }
+        
+        if (reservations[checkin]) {
+          showMessage('This date is already reserved.', true);
+          return;
+        }
+        
+        try {
+          const resp = await createReservation(name, checkin);
+          console.log('Reservation created:', resp);
+          
+          if (resp.error) {
+            showMessage(resp.error, true);
+            return;
+          }
+          
+          // Refresh reservations and rebuild calendar
+          await fetchReservations();
+          buildCalendar(current);
+          form.reset();
+          showMessage('Reservation created successfully!');
+          
+        } catch (err) {
+          console.error('Error in form submission:', err);
+          showMessage(`Error creating reservation: ${err.message}`, true);
+        }
       });
 
       document.getElementById('searchBtn').addEventListener('click', async () => {
         const q = document.getElementById('searchName').value.trim();
-        if (!q) return alert('Please enter a name to search.');
+        if (!q) {
+          alert('Please enter a name to search.');
+          return;
+        }
         const found = await searchReservations(q);
         renderSearchResults(found);
       });
