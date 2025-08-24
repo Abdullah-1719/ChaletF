@@ -89,7 +89,7 @@
     }
 
     .day.available:hover {
-      background: #dcfce7; /* hover lighter green */
+      background: #dcfce7;
     }
 
     .day.booked {
@@ -209,12 +209,6 @@
       border-radius: 8px;
       margin-top: 12px;
     }
-
-    .loading {
-      opacity: 0.6;
-      pointer-events: none;
-    }
-
   </style>
 </head>
 <body>
@@ -288,7 +282,17 @@
     async function fetchReservations() {
       try {
         const res = await fetch(`${API_BASE}/api/reservations`);
-        reservations = await res.json();
+        const data = await res.json();
+
+        // Normalize { "YYYY-MM-DD": { name, id } }
+        reservations = {};
+        if (Array.isArray(data)) {
+          data.forEach(r => {
+            reservations[r.date] = { name: r.name, id: r.id };
+          });
+        } else {
+          reservations = data;
+        }
       } catch (err) {
         console.error("Error fetching reservations:", err);
         reservations = {};
@@ -406,10 +410,7 @@
     }
 
     window.cancelReservation = async function(dateString){
-      if (!reservations[dateString]) {
-        alert('Reservation not found.');
-        return;
-      }
+      if (!reservations[dateString]) return alert('Reservation not found.');
       if (confirm('Cancel this reservation?')) {
         await deleteReservation(dateString);
         await fetchReservations();
@@ -437,7 +438,6 @@
         const checkin = form.checkin.value;
         if (!name || !checkin) return showMessage('Please complete the form.', true);
         if (reservations[checkin]) return showMessage('This date is already reserved.', true);
-
         const resp = await createReservation(name, checkin);
         if (resp.error) return showMessage(resp.error, true);
         await fetchReservations();
@@ -451,10 +451,6 @@
         if (!q) return alert('Please enter a name to search.');
         const found = await searchReservations(q);
         renderSearchResults(found);
-      });
-
-      document.getElementById('searchName').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') document.getElementById('searchBtn').click();
       });
     });
   </script>
