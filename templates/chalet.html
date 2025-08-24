@@ -47,17 +47,6 @@
       color: #111827;
     }
 
-    /* Debug panel */
-    .debug-panel {
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 20px;
-      font-family: monospace;
-      font-size: 12px;
-    }
-
     /* ===== Calendar ===== */
     #calendar {
       display: grid;
@@ -129,6 +118,7 @@
       margin-top: 4px;
       font-size: 12px;
       color: #374151;
+      font-weight: 500;
     }
 
     /* ===== Buttons ===== */
@@ -228,10 +218,6 @@
   </header>
 
   <div class="container">
-    <div class="debug-panel" id="debugPanel">
-      <strong>Debug Info:</strong><br>
-      <div id="debugContent">Loading...</div>
-    </div>
     <h2 id="monthDisplay"></h2>
     <p>Tap an <strong>Available</strong> day to pre-fill the reservation date.</p>
     <div class="actions">
@@ -283,16 +269,6 @@
     let reservations = {}; 
     let current = new Date();
 
-    function updateDebug() {
-      const debugContent = document.getElementById('debugContent');
-      debugContent.innerHTML = `
-        API Base: ${API_BASE}<br>
-        Current reservations count: ${Object.keys(reservations).length}<br>
-        Reservations: ${JSON.stringify(reservations, null, 2)}<br>
-        Current month: ${current.getMonth() + 1}/${current.getFullYear()}
-      `;
-    }
-
     function showMessage(message, isError = false) {
       const messageDiv = document.getElementById('reservationMessage');
       messageDiv.className = isError ? 'error-message' : 'success-message';
@@ -305,28 +281,37 @@
 
     async function fetchReservations() {
       try {
-        console.log('Fetching reservations from:', `${API_BASE}/api/reservations`);
         const res = await fetch(`${API_BASE}/api/reservations`);
-        
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
         
         const data = await res.json();
-        console.log('Fetched reservations:', data);
-        reservations = data;
-        updateDebug();
+        
+        // Handle different possible response formats
+        if (Array.isArray(data)) {
+          // If it's an array, convert to object
+          reservations = {};
+          data.forEach(item => {
+            if (item.date && item.name) {
+              reservations[item.date] = { name: item.name };
+            }
+          });
+        } else if (typeof data === 'object') {
+          // If it's already an object, use it directly
+          reservations = data;
+        } else {
+          reservations = {};
+        }
+        
       } catch (err) {
         console.error("API error fetching reservations:", err);
-        showMessage(`Error loading reservations: ${err.message}`, true);
         reservations = {};
-        updateDebug();
       }
     }
 
     async function createReservation(name, date) {
       try {
-        console.log('Creating reservation:', { name, date });
         const res = await fetch(`${API_BASE}/api/reservations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -334,11 +319,15 @@
         });
         
         if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+          const errorText = await res.text();
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
         }
         
         const result = await res.json();
-        console.log('Create reservation response:', result);
+        
+        // Immediately add the reservation to local state
+        reservations[date] = { name: name };
+        
         return result;
       } catch (err) {
         console.error("Error creating reservation:", err);
@@ -348,10 +337,16 @@
 
     async function deleteReservation(date) {
       try {
-        const res = await fetch(`${API_BASE}/api/reservations/${date}`, { method: "DELETE" });
+        const res = await fetch(`${API_BASE}/api/reservations/${date}`, { 
+          method: "DELETE" 
+        });
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
+        
+        // Remove from local state immediately
+        delete reservations[date];
+        
         return res.json();
       } catch (err) {
         console.error("Error deleting reservation:", err);
@@ -376,9 +371,6 @@
     function ymd(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 
     function buildCalendar(date) {
-      console.log('Building calendar for:', date.getFullYear(), date.getMonth() + 1);
-      console.log('Current reservations:', reservations);
-      
       const calendar = document.getElementById('calendar');
       const monthDisplay = document.getElementById('monthDisplay');
       calendar.innerHTML = '';
@@ -406,7 +398,8 @@
         calendar.appendChild(e);
       }
 
-      const today = new Date(); today.setHours(0,0,0,0);
+      const today = new Date(); 
+      today.setHours(0,0,0,0);
 
       for (let day = 1; day <= daysInMonth; day++) {
         const cell = document.createElement('div');
@@ -419,18 +412,15 @@
         const thisDate = new Date(year, month, day);
         const key = ymd(thisDate);
 
-        console.log(`Checking date ${key}:`, reservations[key]);
-
         if (thisDate < today) {
           cell.classList.add('past');
-        } else if (reservations[key]) {
+        } else if (reservations[key] && reservations[key].name) {
           cell.classList.add('booked');
           const nameEl = document.createElement('div');
           nameEl.className = 'resv-name';
           nameEl.textContent = reservations[key].name;
           cell.appendChild(nameEl);
           cell.title = `Reserved by: ${reservations[key].name}`;
-          console.log(`Date ${key} is booked by:`, reservations[key].name);
         } else {
           cell.classList.add('available');
           cell.addEventListener('click', () => {
@@ -442,19 +432,22 @@
         if (ymd(thisDate) === ymd(today)) cell.classList.add('today');
         calendar.appendChild(cell);
       }
-      
-      updateDebug();
     }
 
     function renderSearchResults(list){
       const resultsDiv = document.getElementById('reservationResults');
-      if (!Object.keys(list).length) {
+      if (!list || !Object.keys(list).length) {
         resultsDiv.innerHTML = '<p style="color:#6b7280">No reservations found for this name.</p>';
         return;
       }
       let html = '';
       Object.entries(list).forEach(([dateString, reservation]) => {
-        const formatted = new Date(dateString).toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+        const formatted = new Date(dateString + 'T00:00:00').toLocaleDateString(undefined, { 
+          weekday:'long', 
+          year:'numeric', 
+          month:'long', 
+          day:'numeric' 
+        });
         html += `
           <div class="reservation-item">
             <div><strong>Name:</strong> ${reservation.name}</div>
@@ -466,11 +459,13 @@
     }
 
     window.cancelReservation = async function(dateString){
-      if (!reservations[dateString]) return alert('Reservation not found.');
+      if (!reservations[dateString]) {
+        alert('Reservation not found.');
+        return;
+      }
       if (confirm('Cancel this reservation?')) {
         try {
           await deleteReservation(dateString);
-          await fetchReservations();
           buildCalendar(current);
           document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled.</p>';
         } catch (err) {
@@ -480,7 +475,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      console.log('Page loaded, initializing...');
       await fetchReservations();
       
       const dateInput = document.getElementById('checkin');
@@ -510,8 +504,6 @@
         const name = form.name.value.trim();
         const checkin = form.checkin.value;
         
-        console.log('Form submitted:', { name, checkin });
-        
         if (!name || !checkin) {
           showMessage('Please complete the form.', true);
           return;
@@ -524,15 +516,13 @@
         
         try {
           const resp = await createReservation(name, checkin);
-          console.log('Reservation created:', resp);
           
-          if (resp.error) {
+          if (resp && resp.error) {
             showMessage(resp.error, true);
             return;
           }
           
-          // Refresh reservations and rebuild calendar
-          await fetchReservations();
+          // Rebuild calendar immediately to show the new reservation
           buildCalendar(current);
           form.reset();
           showMessage('Reservation created successfully!');
@@ -549,8 +539,12 @@
           alert('Please enter a name to search.');
           return;
         }
-        const found = await searchReservations(q);
-        renderSearchResults(found);
+        try {
+          const found = await searchReservations(q);
+          renderSearchResults(found);
+        } catch (err) {
+          alert(`Search error: ${err.message}`);
+        }
       });
     });
   </script>
