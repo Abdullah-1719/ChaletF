@@ -9,7 +9,7 @@ CORS(app)
 # PostgreSQL connection
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
     "DATABASE_URL",
-    "postgresql://postgres:yourpassword@localhost:5432/chaletdb"  # adjust for local
+    "postgresql://chaletdb_user:LsRIQ8uCcwJGjaQ0zchrO3bLWozqQzvU@dpg-d2jhdendiees73c889ug-a.oregon-postgres.render.com/chaletdb"  # adjust for local
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
