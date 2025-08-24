@@ -230,7 +230,6 @@
       <button id="prevBtn" class="btn light">⟵ Prev</button>
       <button id="todayBtn" class="btn primary">Today</button>
       <button id="nextBtn" class="btn light">Next ⟶</button>
-      <button id="refreshBtn" class="btn light">🔄 Refresh</button>
     </div>
     <div id="calendar"></div>
     <div class="legend">
@@ -275,26 +274,6 @@
     const API_BASE = "https://chaletf.onrender.com";
     let reservations = {}; 
     let current = new Date();
-    let isLoading = false;
-
-    function setLoading(loading) {
-      isLoading = loading;
-      const elements = [
-        document.getElementById('submitBtn'),
-        document.getElementById('searchBtn'),
-        document.getElementById('refreshBtn')
-      ];
-      
-      elements.forEach(el => {
-        if (el) el.disabled = loading;
-      });
-      
-      if (loading) {
-        document.body.classList.add('loading');
-      } else {
-        document.body.classList.remove('loading');
-      }
-    }
 
     function showMessage(message, isError = false) {
       const messageDiv = document.getElementById('reservationMessage');
@@ -308,89 +287,31 @@
 
     async function fetchReservations() {
       try {
-        setLoading(true);
         const res = await fetch(`${API_BASE}/api/reservations`);
-        
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        
-        const data = await res.json();
-        reservations = data || {};
-        
+        reservations = await res.json();
       } catch (err) {
         console.error("Error fetching reservations:", err);
-        showMessage(`Failed to load reservations: ${err.message}`, true);
         reservations = {};
-      } finally {
-        setLoading(false);
       }
     }
 
     async function createReservation(name, date) {
-      try {
-        setLoading(true);
-        const res = await fetch(`${API_BASE}/api/reservations`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: name.trim(), date })
-        });
-        
-        const result = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(result.error || `HTTP ${res.status}`);
-        }
-        
-        return result;
-      } catch (err) {
-        console.error("Error creating reservation:", err);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+      const res = await fetch(`${API_BASE}/api/reservations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), date })
+      });
+      return res.json();
     }
 
     async function deleteReservation(date) {
-      try {
-        setLoading(true);
-        const res = await fetch(`${API_BASE}/api/reservations/${date}`, { 
-          method: "DELETE" 
-        });
-        
-        const result = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(result.error || `HTTP ${res.status}`);
-        }
-        
-        return result;
-      } catch (err) {
-        console.error("Error deleting reservation:", err);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+      const res = await fetch(`${API_BASE}/api/reservations/${date}`, { method: "DELETE" });
+      return res.json();
     }
 
     async function searchReservations(query) {
-      try {
-        setLoading(true);
-        const res = await fetch(`${API_BASE}/api/reservations/search?name=${encodeURIComponent(query)}`);
-        
-        const result = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(result.error || `HTTP ${res.status}`);
-        }
-        
-        return result;
-      } catch (err) {
-        console.error("Error searching reservations:", err);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+      const res = await fetch(`${API_BASE}/api/reservations/search?name=${encodeURIComponent(query)}`);
+      return res.json();
     }
 
     function pad(n){ return String(n).padStart(2,'0'); }
@@ -490,111 +411,50 @@
         return;
       }
       if (confirm('Cancel this reservation?')) {
-        try {
-          await deleteReservation(dateString);
-          
-          // Refresh data from server
-          await fetchReservations();
-          buildCalendar(current);
-          
-          document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled successfully.</p>';
-        } catch (err) {
-          alert(`Error cancelling reservation: ${err.message}`);
-        }
+        await deleteReservation(dateString);
+        await fetchReservations();
+        buildCalendar(current);
+        document.getElementById('reservationResults').innerHTML = '<p style="color:#16a34a">Reservation cancelled successfully.</p>';
       }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Initial load
       await fetchReservations();
-      
       const dateInput = document.getElementById('checkin');
       const todayStr = new Date().toISOString().split('T')[0];
       dateInput.min = todayStr;
 
-      // Navigation buttons
-      document.getElementById('prevBtn').addEventListener('click', () => { 
-        current.setMonth(current.getMonth() - 1); 
-        buildCalendar(current); 
-      });
-      
-      document.getElementById('nextBtn').addEventListener('click', () => { 
-        current.setMonth(current.getMonth() + 1); 
-        buildCalendar(current); 
-      });
-      
-      document.getElementById('todayBtn').addEventListener('click', () => { 
-        current = new Date(); 
-        buildCalendar(current); 
-      });
-
-      // Refresh button
-      document.getElementById('refreshBtn').addEventListener('click', async () => {
-        await fetchReservations();
-        buildCalendar(current);
-        showMessage('Calendar refreshed!');
-      });
+      document.getElementById('prevBtn').addEventListener('click', () => { current.setMonth(current.getMonth() - 1); buildCalendar(current); });
+      document.getElementById('nextBtn').addEventListener('click', () => { current.setMonth(current.getMonth() + 1); buildCalendar(current); });
+      document.getElementById('todayBtn').addEventListener('click', () => { current = new Date(); buildCalendar(current); });
 
       buildCalendar(current);
 
-      // Form submission
       document.getElementById('reservationForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const form = e.currentTarget;
         const name = form.name.value.trim();
         const checkin = form.checkin.value;
-        
-        if (!name || !checkin) {
-          showMessage('Please complete the form.', true);
-          return;
-        }
-        
-        if (reservations[checkin]) {
-          showMessage('This date is already reserved.', true);
-          return;
-        }
-        
-        try {
-          const resp = await createReservation(name, checkin);
-          
-          if (resp && resp.error) {
-            showMessage(resp.error, true);
-            return;
-          }
-          
-          // Refresh data from server to ensure consistency
-          await fetchReservations();
-          buildCalendar(current);
-          form.reset();
-          showMessage('Reservation created successfully!');
-          
-        } catch (err) {
-          console.error('Error in form submission:', err);
-          showMessage(`Error creating reservation: ${err.message}`, true);
-        }
+        if (!name || !checkin) return showMessage('Please complete the form.', true);
+        if (reservations[checkin]) return showMessage('This date is already reserved.', true);
+
+        const resp = await createReservation(name, checkin);
+        if (resp.error) return showMessage(resp.error, true);
+        await fetchReservations();
+        buildCalendar(current);
+        form.reset();
+        showMessage('Reservation created successfully!');
       });
 
-      // Search functionality
       document.getElementById('searchBtn').addEventListener('click', async () => {
         const q = document.getElementById('searchName').value.trim();
-        if (!q) {
-          alert('Please enter a name to search.');
-          return;
-        }
-        try {
-          const found = await searchReservations(q);
-          renderSearchResults(found);
-        } catch (err) {
-          document.getElementById('reservationResults').innerHTML = 
-            `<p style="color:#ef4444">Search error: ${err.message}</p>`;
-        }
+        if (!q) return alert('Please enter a name to search.');
+        const found = await searchReservations(q);
+        renderSearchResults(found);
       });
 
-      // Search on Enter key
       document.getElementById('searchName').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          document.getElementById('searchBtn').click();
-        }
+        if (e.key === 'Enter') document.getElementById('searchBtn').click();
       });
     });
   </script>
