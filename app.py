@@ -102,10 +102,9 @@ def search_reservations():
         result[r.date.strftime("%Y-%m-%d")] = {"name": r.name}
     return jsonify(result)
 
-# ✅ Initialize DB if needed
-@app.before_first_request
-def create_tables():
-    db.create_all()
 
+# ✅ Run app
 if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()   # make sure tables exist
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
